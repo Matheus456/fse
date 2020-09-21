@@ -12,14 +12,10 @@ calibracao_parametros = bme280.load_calibration_params(bus, endereco)
 
 while True:
     dado = bme280.sample(bus, endereco, calibracao_parametros)
-
-    # test 2
     mylcd.lcd_display_string("<MR> 'T:'" + str(float("{: .2f}".format(
         dado.temperature))), 1)
     mylcd.lcd_display_string('U:' + str(float("{:.2f}".format(dado.humidity)))
                              + 'P:' + str(float("{:.2f}".format(dado.pressure))), 2)
-
-    sleep(1)  # 2 sec delay
-
+    sleep(1)
     mylcd.lcd_clear()
 mylcd.backlight(0)
