@@ -38,7 +38,7 @@ void *lcd_i2c(void* params)   {
     typeln("TR ");
     float tr = temperatures->tr;
     typeFloat(tr);
-    delay(2000);
+    delay(1000);
     ClrLcd();
   }
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 #include <time.h>
 #include <bcm2835.h>
 #include <unistd.h>
@@ -18,6 +19,7 @@ void trata_interrupcao(int sinal) {
     start_resistor(OFF);
     start_fan(OFF);
     bcm2835_close();
+    endwin();
     exit(0);
 }
 
@@ -27,14 +29,8 @@ int main(void) {
   struct Temperatures temperatures;
   signal(SIGINT, trata_interrupcao);
 
-  float tr;
-  float h;
-  printf("Temperatura desejada:");
-  scanf(" %f", &tr);
-  printf("Histerese:");
-  scanf(" %f", &h);
-  temperatures.tr = tr;
-  temperatures.hysteresis = h;
+  temperatures.tr = 40;
+  temperatures.hysteresis = 1;
     
   // External Temperature
   pthread_create(&tI2c, NULL, temperature_i2c, &temperatures);

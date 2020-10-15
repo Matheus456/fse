@@ -32,12 +32,12 @@ void *temperature_control_gpio(void *params)
 
     int counter;
     while(1){
-        if(temperatures->ti < (temperatures->tr - temperatures->hysteresis)){
+        if(temperatures->ti < (temperatures->tr - temperatures->hysteresis/2.0)){
             // printf("\nLiga resistor\n");
             start_resistor(ON);
             start_fan(OFF);
         }
-        else if(temperatures->ti > (temperatures->tr + temperatures->hysteresis)){
+        else if(temperatures->ti > (temperatures->tr + temperatures->hysteresis/2.0)){
             // printf("\nLiga Ventilador\n");
             start_resistor(OFF);
             start_fan(ON);
@@ -49,20 +49,5 @@ void *temperature_control_gpio(void *params)
         }
         usleep(500000);
     }
-    // printf("Resetando\n");
-    // start_resistor(OFF);
-    // start_fan(OFF);
-    // sleep(2);
-    // printf("Inicializando Ventoinha\n");
-    // start_fan(ON);
-    // sleep(3);
-    // printf("Inicializando Resistor\n");
-    // start_resistor(ON);
-    // sleep(3);
-    // printf("Desligando Ventoinha\n");
-    // start_fan(OFF);
-    // sleep(3);
-    // printf("Desligando Resistor\n");
-    // start_resistor(OFF);
 }
 

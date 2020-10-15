@@ -68,7 +68,7 @@ void menuUser(struct Temperatures *temperatures) {
     mvprintw(5+MARGIN,2+MARGIN,"a. Alterar temperatura");
     mvprintw(6+MARGIN,2+MARGIN,"b. Alterar histerese");
     mvprintw(7+MARGIN,2+MARGIN,"c. Alterar tipo de controle");
-    mvprintw(8+MARGIN,2+MARGIN,"d. Desligar sistema");
+    mvprintw(8+MARGIN,2+MARGIN,"Pressione CTRL + C para sair do sistema");
 
     mvprintw(9+MARGIN,2+MARGIN,"Digite a sua escolha:");
     if( poll(&mypoll, 1, 0) ){
@@ -78,7 +78,8 @@ void menuUser(struct Temperatures *temperatures) {
 
     if(!strcmp(choice, "a")) {
       mvprintw(11+MARGIN,2+MARGIN,"Digite a temperatura: ");
-      scanw(" %4lf", &temperatures->tr) ;
+      scanw(" %4lf", &temperatures->tr);
+      strcpy(temperatures->inputType, "t");
     }
     else if(!strcmp(choice, "b")) {
       mvprintw(11+MARGIN,2+MARGIN,"Digite o valor da histerese: ");
@@ -97,9 +98,6 @@ void menuUser(struct Temperatures *temperatures) {
         mvprintw(13+MARGIN,2+MARGIN,"Escolha inválida");
       }
     }
-    else if(!strcmp(choice, "d")) {
-      mvprintw(10+MARGIN,2+MARGIN,"ADIOS");
-    }
     else if(!strcmp(choice, "$")) {
       mvprintw(10+MARGIN,2+MARGIN,"");
     }
@@ -107,13 +105,3 @@ void menuUser(struct Temperatures *temperatures) {
       mvprintw(10+MARGIN,2+MARGIN,"Escolha inválida");
     }
 }
-// Primeiro menu
-// Digite a temperatura desejada
-// Digite o histerese desejado
-// Qual será o tipo de controle? (t -> teclado/p -> potênciometro)
-
-// Menu usuário
-// a. Alterar temperatura
-// b. Alterar histerese
-// c. Alterar tipo de controle
-// d. Desligar sistema

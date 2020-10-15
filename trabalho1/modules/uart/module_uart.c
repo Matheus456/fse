@@ -42,9 +42,7 @@ int conexao_uart()
 
     if (uart0_filestream == -1)
     {
-        // printf("Erro - Não foi possível iniciar a UART.\n");
         close(uart0_filestream);
-        exit(0);
     }
     else
     {
@@ -76,16 +74,7 @@ void ler_dados_uart(unsigned char *tx_buffer, int uart0_filestream, int codigo, 
 
 void escrever_dados_uart(unsigned char *tx_buffer, int uart0_filestream)
 {
-    // printf("Escrevendo caracteres na UART ...\n");
     int count = write(uart0_filestream, tx_buffer, strlen((char *)tx_buffer));
-    // if (count < 0)
-    // {
-    //     printf("UART TX error\n");
-    // }
-    // else
-    // {
-    //     printf("escrito.\n");
-    // }
 }
 
 void mensagem_solicitacao(unsigned char *tx_buffer, int code)
