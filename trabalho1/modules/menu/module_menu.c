@@ -16,14 +16,12 @@ void *menu(void *params)
 {
     struct Temperatures *temperatures = params;
     int row,col;				/* to store the number of rows and *
-    //                     * the number of colums of the screen */
-    int c = 0;
     /* Init ncurses mode */
     initscr ();
     /* Hide cursor */
     curs_set (0);
 
-    while (c < 1000) {
+    while (1) {
         char str[80] = "";
         menuBorders();
         tempInfo(temperatures);
@@ -73,7 +71,6 @@ void menuUser(struct Temperatures *temperatures) {
     mvprintw(9+MARGIN,2+MARGIN,"Digite a sua escolha:");
     if( poll(&mypoll, 1, 0) ){
       getstr(choice);
-      mvprintw(20+MARGIN,2+MARGIN, "Choice |%s|", choice);
     }
 
     if(!strcmp(choice, "a")) {

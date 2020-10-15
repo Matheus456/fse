@@ -28,14 +28,14 @@ void *lcd_i2c(void* params)   {
   fd = wiringPiI2CSetup(I2C_ADDR);
   lcd_init(); // setup LCD
   while (1) {
-    typeln("TE ");
+    typeln("TE");
     float te = temperatures->te;
     typeFloat(te);
-    typeln(" TI ");
+    typeln(" TI");
     float ti = temperatures->ti;
     typeFloat(ti);
     lcdLoc(LINE2);
-    typeln("TR ");
+    typeln("TR");
     float tr = temperatures->tr;
     typeFloat(tr);
     delay(1000);

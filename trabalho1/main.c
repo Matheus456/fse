@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
+#include <string.h>
 
 #include "control_lcd.h"
 #include "./modules/i2c/temperature_module_i2c.h"
@@ -29,9 +30,10 @@ int main(void) {
   struct Temperatures temperatures;
   signal(SIGINT, trata_interrupcao);
 
-  temperatures.tr = 40;
-  temperatures.hysteresis = 1;
-    
+  temperatures.tr = 35;
+  temperatures.hysteresis = 5;
+  strcpy(temperatures.inputType, "t");    
+  
   // External Temperature
   pthread_create(&tI2c, NULL, temperature_i2c, &temperatures);
   
