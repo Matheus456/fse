@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <bcm2835.h>
 #include <unistd.h>
@@ -13,9 +14,18 @@
 #include "./modules/csv/module_csv.h"
 #include "./modules/menu/module_menu.h"
 
+void trata_interrupcao(int sinal) {
+    start_resistor(OFF);
+    start_fan(OFF);
+    bcm2835_close();
+    exit(0);
+}
+
+
 int main(void) {
   pthread_t tI2c, tUart, tLcdPrint, tGpio, tCsv, tMenu;
   struct Temperatures temperatures;
+  signal(SIGINT, trata_interrupcao);
 
   float tr;
   float h;

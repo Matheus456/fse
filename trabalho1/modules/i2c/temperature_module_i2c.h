@@ -12,22 +12,6 @@ struct identifier
 };
 
 /*!
- * @brief Function for print the temperature, humidity and pressure data.
- *
- * @param[out] comp_data    :   Structure instance of bme280_data
- *
- * @note Sensor data whose can be read
- *
- * sens_list
- * --------------
- * Pressure
- * Temperature
- * Humidity
- *
- */
-void print_sensor_data(struct bme280_data *comp_data, struct Temperatures *temperatures);
-
-/*!
  *  @brief Function for reading the sensor's registers through I2C bus.
  *
  *  @param[in] reg_addr       : Register address.

@@ -9,3 +9,5 @@
 #define RESISTOR RPI_V2_GPIO_P1_16 // BCM 23
 
 void *temperature_control_gpio(void *params);
+void start_resistor(int);
+void start_fan(int);

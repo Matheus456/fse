@@ -21,12 +21,6 @@ void start_fan(int fan_mask) {
 }
 
 
-void trata_interrupcao(int sinal) {
-    start_resistor(OFF);
-    start_fan(OFF);
-    bcm2835_close();
-    exit(0);
-}
 
 void *temperature_control_gpio(void *params)
 {
@@ -35,8 +29,6 @@ void *temperature_control_gpio(void *params)
       exit(1);
       
     configura_pinos();
-
-    signal(SIGINT, trata_interrupcao);
 
     int counter;
     while(1){
@@ -55,7 +47,7 @@ void *temperature_control_gpio(void *params)
             start_resistor(OFF);
             start_fan(OFF);
         }
-        sleep(2);
+        usleep(500000);
     }
     // printf("Resetando\n");
     // start_resistor(OFF);

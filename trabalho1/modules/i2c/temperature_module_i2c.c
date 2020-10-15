@@ -120,30 +120,6 @@ int8_t user_i2c_write(uint8_t reg_addr, const uint8_t *data, uint32_t len, void 
     return BME280_OK;
 }
 
-/*!
- * @brief This API used to print the sensor temperature, pressure and humidity data.
- */
-void print_sensor_data(struct bme280_data *comp_data, struct Temperatures *temperatures)
-{
-    float temp, press, hum;
-
-#ifdef BME280_FLOAT_ENABLE
-    temp = comp_data->temperature;
-#else
-#ifdef BME280_64BIT_ENABLE
-    temp = 0.01f * comp_data->temperature;
-    press = 0.0001f * comp_data->pressure;
-    hum = 1.0f / 1024.0f * comp_data->humidity;
-#else
-    temp = 0.01f * comp_data->temperature;
-    press = 0.01f * comp_data->pressure;
-    hum = 1.0f / 1024.0f * comp_data->humidity;
-#endif
-#endif
-    printf("%0.2lf deg C\n", temp);
-    temperatures->te = temp;
-
-}
 
 /*!
  * @brief This API reads the sensor temperature, pressure and humidity data in forced mode.
@@ -208,7 +184,7 @@ int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev, struct Temperature
         // print_sensor_data(&comp_data, temperatures);
         // printf("Temperatura Externa: %f\n", comp_data.temperature);
         // print_sensor_data(&comp_data);
-        sleep(1);
+        usleep(500000);
     }
 
     return result;
