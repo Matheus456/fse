@@ -127,7 +127,7 @@ void menuUser(struct data *data) {
       int conditionalAir;
       mvprintw((row++)+MARGIN,2+MARGIN,"Digite o número do ar condicionado: ");
       scanw(" %d", &conditionalAir);
-      // mvprintw((row++)+MARGIN,2+MARGIN,"Valor escolhido = %d, valor atual = %d", conditionalAir, data->devices->airConditioning1);
+      // mvprintw((row++)+MARGIN,2+MARGIN,"value escolhido = %d, value atual = %d", conditionalAir, data->devices->airConditioning1);
       if (conditionalAir == 1) {
         send_data(AIR_BEDROOM_1, invertValues[data->devices->airConditioning1], 0);
       }

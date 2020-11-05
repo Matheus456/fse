@@ -59,10 +59,6 @@ void handleTCPClient(int clientSocket, struct climate *climate) {
         else if(buffer[0] == TEMPERATURE_CONTROL) {
             climate->expected_temperature = int_to_double(buffer[1], buffer[2]);
         }
-        // if(buffer[0] == 20) {
-            
-        // }
-        // printf("Dispositivo: %d, valor: %d\n", buffer[0], buffer[1]); 
     }
 }
 

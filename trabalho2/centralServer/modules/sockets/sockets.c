@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include "central_server.h"
 #include "sockets.h"
-
+#include "csv.h"
 
 double int_to_double(int integer, int decimal);
 int initServerSocket(int *socket_desc, struct sockaddr_in *server, char *ip, int porta, int *clienteLength);
@@ -21,6 +21,7 @@ void send_data(int code, int value, int decimal){
     if(flag) {
         int dataClient[3] = {code, value, decimal};
         send(distributedSocket, &dataClient, 3 * sizeof(int), 0);
+        add_row_csv(code, value, decimal);
     }
     close(distributedSocket);
 }
@@ -56,7 +57,7 @@ void handleTCPClient(int socketCliente, struct data *data, int **mapping, int cl
             *mapping[buffer[0]] = buffer[1];
         }
         else {
-            // printf("PASSANDO VALORES: %d, %d", buffer[1], buffer[2])
+            // printf("PASSANDO valueES: %d, %d", buffer[1], buffer[2])
             double value = int_to_double(buffer[1], buffer[2]);
             if(buffer[0] == TEMPERATURE) {
                 data->climate->temperature = value;
