@@ -1,35 +1,38 @@
 
 #define QNT_DEVICES 18
+#define QNTD_OUTPUTS 6
+#define QNTD_INPUTS 12
 
 // Lâmpadas
-#define L_COZINHA 0
-#define L_SALA 1
-#define L_QUARTO_1 2
-#define L_QUARTO_2 3
+#define L_KITCHEN 0
+#define L_ROOM 1
+#define L_BEDROOM_1 2
+#define L_BEDROOM_2 3
 
 // Ar-Condicionado
-#define AR_QUARTO_1 4
-#define AR_QUARTO_2 5
+#define AIR_BEDROOM_1 4
+#define AIR_BEDROOM_2 5
 
 // Sensores de presença
-#define SP_SALA 6
-#define SP_COZINHA 7
+#define SP_ROOM 6
+#define SP_KITCHEN 7
 
 // Sensores de abertura
-#define SA_PORTA_COZINHA 8
-#define SA_JANELA_COZINHA 9
-#define SA_PORTA_SALA 10
-#define SA_JANELA_SALA 11
-#define SA_JANELA_QUARTO_1 12
-#define SA_JANELA_QUARTO_2 13
+#define SA_DOOR_KITCHEN 8
+#define SA_WINDOW_KITCHEN 9
+#define SA_DOOR_ROOM 10
+#define SA_WINDOW_ROOM 11
+#define SA_WINDOW_ROOM_1 12
+#define SA_WINDOW_ROOM_2 13
 
-// Temperatura e umidade
-#define TEMPERATURA_INTEIRA 14
-#define TEMPERATURA_DECIMAL 15
-#define UMIDADE_INTEIRA 16
-#define UMIDADE_DECIMAL 17
+// Temperature and Humidity
+#define TEMPERATURE 14
+#define HUMIDITY 15
+#define TEMPERATURE_CONTROL 16
 
-// Address
-#define IP "127.0.0.1"
-
-void send_data(int code, double value);
+struct climate
+{
+    double expected_temperature;
+    double temperature;
+    double humidity;
+};

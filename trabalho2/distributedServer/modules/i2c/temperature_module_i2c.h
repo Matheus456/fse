@@ -1,3 +1,4 @@
+
 #include "bme280_defs.h"
 #define RASP_I2C_DEVICE                              "/dev/i2c-1"
 
@@ -10,4 +11,5 @@ struct identifier
     int8_t fd;
 };
 
-void *temperature_i2c(void *params);
+void setup_i2c();
+void send_temperature_and_humidity(struct climate *climate);

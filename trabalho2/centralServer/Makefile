@@ -1,7 +1,8 @@
 central_server: 
-	gcc central_server.c ./modules/menu/module_menu.c \
-		utils.c \
-		-I ./modules/menu/ \
+	gcc central_server.c ./modules/menu/menu.c ./modules/sockets/sockets.c \
+ 	 	-I . \
+ 	 	-I ./modules/sockets \
+		-I ./modules/menu \
 		-lpthread -lncurses -o central_server
 
 clean:

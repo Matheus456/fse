@@ -1,69 +1,93 @@
-// Código adaptado do Livro: Raspberry Pi And The IoT In C
-// Autor: Harry Fairhead
-// Disponível em: https://www.iot-programmer.com/index.php/books/22-raspberry-pi-and-the-iot-in-c/chapters-raspberry-pi-and-the-iot-in-c/55-raspberry-pi-and-the$
-// 
 #include <stdio.h>
 #include <stdlib.h>
 #include <bcm2835.h>
 #include <sched.h>
 #include <pthread.h>
 #include <sys/mman.h>
-
-// Sensores de presença
-#define PINO_SP_SALA RPI_V2_GPIO_P1_22
-#define PINO_SP_COZINHA RPI_V2_GPIO_P1_37
-
-// Sensores de abertura
-#define PINO_SA_PORTA_COZINHA RPI_V2_GPIO_P1_29
-#define PINO_SA_JANELA_COZINHA RPI_V2_GPIO_P1_31
-#define PINO_SA_PORTA_SALA RPI_V2_GPIO_P1_32
-#define PINO_SA_JANELA_SALA RPI_V2_GPIO_P1_36
-#define PINO_SA_JANELA_QUARTO_1 RPI_V2_GPIO_P1_38
-#define PINO_SA_JANELA_QUARTO_2 RPI_V2_GPIO_P1_40
-
-#define QNT_SENSORES 8
+#include "sockets.h"
+#include "distributed_server.h"
+#include "module_gpio.h"
 
 void *polling(void *params);
+void temperature_control_gpio(struct climate *climate);
+void turn_on_component(int index);
+void turn_off_component(int index);
+void config_pins();
 
-int main(){
-    // Define a prioridade do programa / thread como máxima 
-    const struct sched_param priority = {1};
-    sched_setscheduler(0, SCHED_FIFO, &priority);
-    // Trava o processo na memória para evitar SWAP
-    // mlockall(MCL_CURRENT | MCL_FUTURE);
+RPiGPIOPin sensores[QNT_SENSORS] = {PIN_SP_ROOM, PIN_SP_KITCHEN, PIN_SA_DOOR_KITCHEN, PIN_SA_WINDOW_KITCHEN, PIN_SA_DOOR_ROOM, PIN_SA_WINDOW_ROOM, PIN_SA_WINDOW_BEDROOM_1, PIN_SA_WINDOW_BEDROOM_2};
+RPiGPIOPin outputs[QNTD_OUTPUTS] = {PIN_L_KITCHEN, PIN_L_ROOM, PIN_L_BEDROOM_1, PIN_L_BEDROOM_2, PIN_AIR_BEDROOM_1, PIN_AIR_BEDROOM_2};
+pthread_t tTempControl;
 
-    // pthread_t t_sensores[8];
-    // RPiGPIOPin sensores[8] = {PINO_SP_SALA, PINO_SP_COZINHA, PINO_SA_PORTA_COZINHA, PINO_SA_JANELA_COZINHA, PINO_SA_PORTA_SALA, PINO_SA_JANELA_SALA, PINO_SA_JANELA_QUARTO_1, PINO_SA_JANELA_QUARTO_2};
-    pthread_t t_sensores[QNT_SENSORES];
-    RPiGPIOPin sensores[QNT_SENSORES] = {PINO_SP_SALA, PINO_SP_COZINHA, PINO_SA_PORTA_COZINHA, PINO_SA_JANELA_COZINHA, PINO_SA_PORTA_SALA, PINO_SA_JANELA_SALA, PINO_SA_JANELA_QUARTO_1, PINO_SA_JANELA_QUARTO_2};
-
-    for(int i=0; i<QNT_SENSORES; i++) {
-        pthread_create(&t_sensores[i], NULL, polling, &sensores[i]);
-    }
-    for(int i=0; i<QNT_SENSORES; i++) {
-        pthread_join (t_sensores[i], NULL);
-    }
+void initGpio(){
+    if (!bcm2835_init())
+        printf("ERROR");
+    config_pins();
 }
 
 void *polling(void *params) {
-    RPiGPIOPin *sensor = (RPiGPIOPin *)params;
-    
-    if (!bcm2835_init())
-        printf("ERROR");
-  
-    bcm2835_gpio_fsel(*sensor, BCM2835_GPIO_FSEL_INPT);
+    int *index = (int *)params;
+    RPiGPIOPin sensor = sensores[*index];
+    bcm2835_gpio_fsel(sensor, BCM2835_GPIO_FSEL_INPT);
 
     volatile int i;
     while (1) {
-        while (1 == bcm2835_gpio_lev(*sensor));
-        while (0 == bcm2835_gpio_lev(*sensor));
+        while (1 == bcm2835_gpio_lev(sensor));
+        send_data(*index+QNTD_OUTPUTS, OFF, 0);
+        while (0 == bcm2835_gpio_lev(sensor));
         for (i = 0; i < 5000; i++) {
-            if (0 == bcm2835_gpio_lev(*sensor)) 
+            if (0 == bcm2835_gpio_lev(sensor)) 
                 break;
         }
-        printf("Detectado %d\n\r", i); 
+        send_data(*index+QNTD_OUTPUTS, ON, 0);
         fflush(stdout);
     }
 
     return (EXIT_SUCCESS);
+}
+
+void config_pins(){
+    // Config output pins
+    bcm2835_gpio_fsel(PIN_L_KITCHEN, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(PIN_L_ROOM, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(PIN_L_BEDROOM_1, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(PIN_L_BEDROOM_2, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(PIN_AIR_BEDROOM_1, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(PIN_AIR_BEDROOM_2, BCM2835_GPIO_FSEL_OUTP);
+}
+
+void initialize_components() {
+    bcm2835_gpio_write(PIN_SP_ROOM, OFF);
+    bcm2835_gpio_write(PIN_SP_KITCHEN, OFF);
+    bcm2835_gpio_write(PIN_SA_DOOR_KITCHEN, OFF);
+    bcm2835_gpio_write(PIN_SA_WINDOW_KITCHEN, OFF);
+    bcm2835_gpio_write(PIN_SA_WINDOW_KITCHEN, OFF);
+    bcm2835_gpio_write(PIN_SA_DOOR_ROOM, OFF);
+    bcm2835_gpio_write(PIN_SA_WINDOW_ROOM, OFF);
+    bcm2835_gpio_write(PIN_SA_WINDOW_BEDROOM_1, OFF);
+    bcm2835_gpio_write(PIN_SA_WINDOW_BEDROOM_2, OFF);
+}
+
+void turn_off_component(int index) {
+    bcm2835_gpio_write(outputs[index], OFF);
+    send_data(index, OFF, 0);
+}
+
+void turn_on_component(int index) {
+    bcm2835_gpio_write(outputs[index], ON);
+    send_data(index, ON, 0);
+}
+
+void temperature_control_gpio(struct climate *climate) {
+    if(climate->temperature <= climate->expected_temperature) {
+        turn_off_component(AIR_BEDROOM_1);
+        send_data(AIR_BEDROOM_1, OFF, 0);
+        turn_off_component(AIR_BEDROOM_2);
+        send_data(AIR_BEDROOM_2, OFF, 0);
+    }
+    else {
+        turn_on_component(AIR_BEDROOM_1);
+        send_data(AIR_BEDROOM_1, ON, 0);
+        turn_on_component(AIR_BEDROOM_2);
+        send_data(AIR_BEDROOM_2, ON, 0);
+    }
 }

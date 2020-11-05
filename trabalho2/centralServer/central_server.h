@@ -1,5 +1,6 @@
 
 #define QNT_DEVICES 18
+#define QNT_OUTPUTS 6
 
 // Lamps
 #define L_KITCHEN 0
@@ -26,10 +27,8 @@
 // Temperature e humidity
 #define TEMPERATURE 14
 #define HUMIDITY 15
-
-#define TOTAL_DEVICES_SENSORS 14
-// Address
-#define IP "127.0.0.1"
+#define TOTAL_DEVICES 14
+#define TEMPERATURE_CONTROL 16
 
 struct devices
 {
@@ -70,7 +69,5 @@ struct data
     struct climate *climate;
     struct sensors *sensors;
     struct devices *devices;
+    double expectedTemperature;
 };
-
-
-void send_data(int code, int value);

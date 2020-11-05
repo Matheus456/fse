@@ -5,81 +5,66 @@
 #include <string.h> 
 #include <sys/socket.h> 
 #include <unistd.h> 
+#include <stdlib.h>
 #include <pthread.h>
+#include <signal.h>
+#include "sockets.h"
 #include "distributed_server.h"
-#include "utils.h"
-  #include <stdlib.h>
-
-// Driver code 
-int serverSocket, clientSock, centralSocket, clienteLength; 
-int sock; 
-struct sockaddr_in distributed_server, centralServer, client; 
-int sensors[8] = {0,0,0,0,0,0,0,0};
-int devices[QNT_DEVICES] = { 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 36, 5, 20, 7 };
-int i, temp; 
-pthread_t trecive, tsend;
+#include "module_gpio.h"
+#include "temperature_module_i2c.h"
 
 void *read_data_distributed(void *params);
 void *send_data_distributed(void *params);
 void handleTCPClient(int socketCliente);
+void *climate_control(void *params);
+void handle_alarm();
+
+pthread_mutex_t set_temperature_mutex;
 
 int main(int argc, char* argv[]) 
 { 
-    initServerSocket(&sock, &distributed_server, IP, 10101, &clienteLength);
-     
-    puts("THREAD"); 
-    pthread_create(&trecive, NULL, read_data_distributed, NULL);
-    while (1)
-    {
-        pthread_create(&tsend, NULL, send_data_distributed, NULL);
-        pthread_join (tsend, NULL);
-        sleep(1);
-    }
+    signal(SIGALRM, handle_alarm);
+    pthread_mutex_init(&set_temperature_mutex, NULL);
+    alarm(1);
     
+    struct climate climate;
+    climate.expected_temperature = -1;
+    // Creating server
+    pthread_t trecive, tsend, ti2c;
+    pthread_create(&trecive, NULL, read_data, &climate);
+
+    // Setup i2c 
+    setup_i2c();
+    pthread_create(&ti2c, NULL, climate_control, &climate);
+
+    // Creating gpio threads to polling
+    initGpio();
+    pthread_t t_sensores[QNT_SENSORS];
+    int aux[QNT_SENSORS] = {0,1,2,3,4,5,6,7};
+    for(int index=0; index<QNT_SENSORS; index++) {
+        pthread_create(&t_sensores[index], NULL, polling, &aux[index]);
+    }
+    for(int index=0; index<QNT_SENSORS; index++) {
+        pthread_join (t_sensores[index], NULL);
+    }
     pthread_join (trecive, NULL);
-    close(centralSocket);
-    printf("ACABOU O KO");
+    pthread_join (ti2c, NULL);
 
     return 0; 
 } 
 
-
-void *send_data_distributed(void *params){
-    int flag = initSocketClient(&centralSocket, &centralServer, IP, 10001); 
-    int values[3];
-    values[0] = rand() % 16; 
-    values[1] = rand() % 50; 
-    values[2] = rand() % 50; 
-    if(flag) {
-        send(centralSocket, &values, 3 * sizeof(int), 0);
-        close(centralSocket);
-    }
+void handle_alarm(){
+    pthread_mutex_unlock(&set_temperature_mutex);
+    alarm(1);
 }
 
-void *read_data_distributed(void *params){
-    printf("ENTREI PARA LER");
-    while(1) {
-        clienteLength = sizeof(struct sockaddr_in); 
-        printf("PASSOU AQUI");
-        clientSock = accept(sock, (struct sockaddr*)&client, (socklen_t*)&clienteLength); 
-        handleTCPClient(clientSock);
-        close(clientSock);
-    }
-    printf("DESISTO!");
-    close(sock);
-}
-
-void handleTCPClient(int socketCliente) {
-	int buffer[4];
-	int read_size;
-
-    while((read_size = recv(clientSock, &buffer, 2 * sizeof(int), 0) > 0)) {
-        printf("TENTOU LER");
-        if(read_size < 0) { 
-            puts("recv failed"); 
-        } 
-        for (i = 0; i < 2; i++) { 
-            printf("\n%d\n", buffer[i]); 
-        } 
+void *climate_control(void *params) {
+    while(1){
+        pthread_mutex_lock(&set_temperature_mutex);
+        struct climate *climate = params;
+        send_temperature_and_humidity(climate);
+        if(climate->expected_temperature > 0){
+            temperature_control_gpio(climate);
+        }
     }
 }

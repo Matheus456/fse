@@ -17,40 +17,37 @@
 /******************************************************************************/
 /*!                         Own header files                                  */
 #include "bme280.h"
+#include "bme280_defs.h"
+#include "distributed_server.h"
 #include "temperature_module_i2c.h"
-#include "../../distributed_server.h"
+#include "sockets.h"
 
 void user_delay_us(uint32_t period, void *intf_ptr);
 int8_t user_i2c_read(uint8_t reg_addr, uint8_t *data, uint32_t len, void *intf_ptr);
 int8_t user_i2c_write(uint8_t reg_addr, const uint8_t *data, uint32_t len, void *intf_ptr);
-int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev, int *devices);
 
-void *temperature_i2c(void *params)
-{
-    int *devices = params;
-    struct bme280_dev dev;
-    struct identifier id;
+struct bme280_dev device;
+struct identifier id;
+
+void setup_i2c(){
 
     /* Variable to define the result */
     int8_t result = BME280_OK;
     
     id.fd = open(RASP_I2C_DEVICE, O_RDWR);
     id.dev_addr = BME280_I2C_ADDR_PRIM; //i2c Address
-    dev.intf = BME280_I2C_INTF;
-    dev.read = user_i2c_read;
-    dev.write = user_i2c_write;
-    dev.delay_us = user_delay_us;
+    device.intf = BME280_I2C_INTF;
+    device.read = user_i2c_read;
+    device.write = user_i2c_write;
+    device.delay_us = user_delay_us;
 
     ioctl(id.fd, I2C_SLAVE, id.dev_addr);
     
     /* Update interface pointer with the structure that contains both device address and file descriptor */
-    dev.intf_ptr = &id;
+    device.intf_ptr = &id;
 
     /* Initialize the bme280 */
-    result = bme280_init(&dev);
-    result = stream_sensor_data_forced_mode(&dev, devices);
-
-    return 0;
+    result = bme280_init(&device);
 }
 
 /*!
@@ -100,7 +97,7 @@ int8_t user_i2c_write(uint8_t reg_addr, const uint8_t *data, uint32_t len, void 
 /*!
  * @brief This API reads the sensor temperature, pressure and humidity data in forced mode.
  */
-int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev, int *devices)
+void send_temperature_and_humidity(struct climate *climate)
 {
     /* Variable to define the result */
     int8_t result = BME280_OK;
@@ -115,36 +112,35 @@ int8_t stream_sensor_data_forced_mode(struct bme280_dev *dev, int *devices)
     struct bme280_data comp_data;
 
     /* Recommended mode of operation: Indoor navigation */
-    dev->settings.osr_h = BME280_OVERSAMPLING_1X;
-    dev->settings.osr_p = BME280_OVERSAMPLING_16X;
-    dev->settings.osr_t = BME280_OVERSAMPLING_2X;
-    dev->settings.filter = BME280_FILTER_COEFF_16;
+    device.settings.osr_h = BME280_OVERSAMPLING_1X;
+    device.settings.osr_p = BME280_OVERSAMPLING_16X;
+    device.settings.osr_t = BME280_OVERSAMPLING_2X;
+    device.settings.filter = BME280_FILTER_COEFF_16;
 
     settings_sel = BME280_OSR_PRESS_SEL | BME280_OSR_TEMP_SEL | BME280_OSR_HUM_SEL | BME280_FILTER_SEL;
 
     /* Set the sensor settings */
-    result = bme280_set_sensor_settings(settings_sel, dev);
+    result = bme280_set_sensor_settings(settings_sel, &device);
 
     /*Calculate the minimum delay required between consecutive measurement based upon the sensor enabled
      *  and the oversampling configuration. */
-    req_delay = bme280_cal_meas_delay(&dev->settings);
+    req_delay = bme280_cal_meas_delay(&device.settings);
 
     /* Continuously stream sensor data */
-    while (1)
-    {
-        /* Set the sensor to forced mode */
-        result = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
+    /* Set the sensor to forced mode */
+    result = bme280_set_sensor_mode(BME280_FORCED_MODE, &device);
 
-        /* Wait for the measurement to complete and print data */
-        dev->delay_us(req_delay, dev->intf_ptr);
-        result = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
-        devices[TEMPERATURA_INTEIRA] = (int)comp_data.temperature;
-        devices[TEMPERATURA_DECIMAL] = (int)(comp_data.temperature - (int)comp_data.temperature)*100;
+    /* Wait for the measurement to complete and print data */
+    device.delay_us(req_delay, device.intf_ptr);
+    result = bme280_get_sensor_data(BME280_ALL, &comp_data, &device);
 
-        devices[UMIDADE_INTEIRA] = (int)comp_data.humidity;
-        devices[UMIDADE_DECIMAL] = (int)(comp_data.humidity - (int)comp_data.humidity)*100;
-        sleep(1);
-    }
-
-    return result;
+    int integerTemp = (int)comp_data.temperature;
+    int decimalTemp = (int)((comp_data.temperature - integerTemp)*100);
+    send_data(TEMPERATURE, integerTemp, decimalTemp);
+    climate->temperature = comp_data.temperature;
+    int integerHum = (int)comp_data.humidity;
+    int decimalHum = (int)((comp_data.humidity - integerHum)*100);
+    send_data(HUMIDITY, integerHum, decimalHum);
+    climate->humidity = comp_data.humidity;
+    printf("TEMPERATURA = %lf, HUMIDADE = %lf", comp_data.temperature, comp_data.humidity);
 }
