@@ -12,10 +12,11 @@
 double int_to_double(int integer, int decimal);
 int initServerSocket(int *socket_desc, struct sockaddr_in *server, char *ip, int porta, int *clienteLength);
 int initSocketClient(int *clientSocket, struct sockaddr_in *server, char *ip, int porta);
-void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSock);
+void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSocket);
+
+int distributedSocket, clientSocket, serverSocket;
 
 void send_data(int code, int value, int decimal){
-    int distributedSocket;
     struct sockaddr_in distributedServer;
     int flag = initSocketClient(&distributedSocket, &distributedServer, DISTRIBUTED_IP, DISTRIBUTED_PORT); 
     if(flag) {
@@ -27,7 +28,7 @@ void send_data(int code, int value, int decimal){
 }
 
 void *read_data(void *params){
-    int serverSocket, clienteLength, clientSock;
+    int serverSocket, clienteLength;
     struct sockaddr_in serverAddr, clientAddr;
     struct data *data = params;
     data->sensors->spRoom = 0;
@@ -41,20 +42,23 @@ void *read_data(void *params){
     initServerSocket(&serverSocket, &serverAddr, CENTRAL_IP, CENTRAL_PORT, &clienteLength);
     while(1) {
         clienteLength = sizeof(struct sockaddr_in); 
-        clientSock = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&clienteLength); 
-        handleTCPClient(clientSock, data, mapping, clientSock);
-        close(clientSock);
+        clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&clienteLength); 
+        handleTCPClient(clientSocket, data, mapping, clientSocket);
+        close(clientSocket);
     }
     close(serverSocket);
 }
 
-void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSock) {
+void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSocket) {
 	int buffer[3];
 	int read_size;
 
-    while ((read_size = recv(clientSock, &buffer, 3*sizeof(int), 0)) > 0) { 
+    while ((read_size = recv(clientSocket, &buffer, 3*sizeof(int), 0)) > 0) { 
         if(buffer[0] <= 13) {
             *mapping[buffer[0]] = buffer[1];
+        }
+        else if(buffer[0] == TEMPERATURE_CONTROL) {
+            data->expectedTemperature = -1;
         }
         else {
             // printf("PASSANDO valueES: %d, %d", buffer[1], buffer[2])
@@ -119,4 +123,11 @@ int initSocketClient(int *clientSocket, struct sockaddr_in *server, char *ip, in
         return 1;
     }
 
+}
+
+void handle_close_sockets()
+{
+    close(distributedSocket);
+    close(clientSocket);
+    close(serverSocket);
 }

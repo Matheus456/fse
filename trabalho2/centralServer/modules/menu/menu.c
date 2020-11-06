@@ -13,23 +13,13 @@ void menuBorders();
 void menuUser(struct data *data);
 
 void *menu(void *params) 
-// void *print_data()
 {
-    // double *data = params;
     struct data *data = params;
 
     int row,col;
     int c = 0;
     initscr ();
     curs_set (0);
-    // while(1) {
-    //   printf("MENU: \n");
-    //   for(int i=0; i<QNT_DEVICES; i++) {
-    //     printf("%d - %d\n", data[i], i);
-    //   }
-    //   sleep(1);
-    // }
-
     while (1) {
         char str[80] = "";
         menuBorders();
@@ -75,20 +65,25 @@ void dataInfo(struct data *data) {
   mvprintw ((row++)+MARGIN, MARGIN_INFO, "  Janela quarto 01: %s", mapResponse[data->sensors->saWindowBedroom1]);
   mvprintw ((row++)+MARGIN, MARGIN_INFO, "  Janela quarto 02: %s", mapResponse[data->sensors->saWindowBedroom2]);
   row++;
-  mvprintw ((row++)+MARGIN, MARGIN_INFO, "Temperatura esperada: %.2lf", data->expectedTemperature);
-
+  if(data->expectedTemperature > 0){
+    mvprintw ((row++)+MARGIN, MARGIN_INFO, "Temperatura esperada: %.2lf", data->expectedTemperature);
+  }
+  else
+  {
+    mvprintw ((row++)+MARGIN, MARGIN_INFO, "Temperatura esperada: Não definida");
+  }
 }
 
 void menuBorders() {
-    char doubleBordX[200] = {"==================================================================================================="};
-    char singleBordx[200] = {"---------------------------------------------------------------------------------------------------"};
+    char doubleBordX[200] = {"========================================================================================================"};
+    char singleBordx[200] = {"--------------------------------------------------------------------------------------------------------"};
     mvprintw (0+MARGIN, 1+MARGIN, doubleBordX);
     mvprintw (4+MARGIN, 1+MARGIN, doubleBordX);
     mvprintw (35+MARGIN, 1+MARGIN, singleBordx);
     for(int row=1; row<35; row++) {
       mvprintw (row+MARGIN, 0+MARGIN, "|");
       mvprintw (row+MARGIN, 50+MARGIN, "|");
-      mvprintw (row+MARGIN, 100+MARGIN, "|");
+      mvprintw (row+MARGIN, 105+MARGIN, "|");
     }
 }
 
@@ -104,6 +99,7 @@ void menuUser(struct data *data) {
     mvprintw((row++)+MARGIN,2+MARGIN,"a. Definir temperatura");
     mvprintw((row++)+MARGIN,2+MARGIN,"b. Controlar Ar condicionado");
     mvprintw((row++)+MARGIN,2+MARGIN,"c. Controlar lâmpada");
+    mvprintw((row++)+MARGIN,2+MARGIN,"d. Desativar controle de temperatura");
     mvprintw((row++)+MARGIN,2+MARGIN,"Pressione CTRL + C para sair do programa");
     row++;
     mvprintw((row++)+MARGIN,2+MARGIN,"Digite a sua escolha:  ");
@@ -162,6 +158,9 @@ void menuUser(struct data *data) {
       else {
         mvprintw((row++)+MARGIN,2+MARGIN,"Ativação cancelada");
       }
+    }
+    else if(!strcmp(choice, "d")) {
+      send_data(TEMPERATURE_CONTROL, -1, 0);
     }
     else if(!strcmp(choice, "$")) {
       mvprintw((row++)+MARGIN,2+MARGIN,"");

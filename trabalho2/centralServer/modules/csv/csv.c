@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <time.h>
 
 int cfileexists(const char *filename);
 void add_row_csv(int code, int value, int decimal);
@@ -30,13 +31,17 @@ void add_row_csv(int code, int value, int decimal)
     fp = fopen(filename, "a");
     if (file_exists != 1)
     {
-      fprintf(fp, "Objetivo,value");
+      fprintf(fp, "Objetivo,valor,dia,hora");
     }
+    time_t t = time(NULL);
+    struct tm date = *localtime(&t);
     if (code==16) {
         fprintf(fp, "\n%s, %d.%d,", mapCode[code], value, decimal);
+        fprintf(fp, " %d-%02d-%02d, %02d:%02d:%02d", date.tm_mday, date.tm_mon + 1, date.tm_year + 1900, date.tm_hour, date.tm_min, date.tm_sec);
     }
     else {
         fprintf(fp, "\n%s, %s,", mapCode[code], mapResponse[value]);
+        fprintf(fp, "%d-%02d-%02d , %02d:%02d:%02d", date.tm_mday, date.tm_mon + 1, date.tm_year + 1900, date.tm_hour, date.tm_min, date.tm_sec);
     }
     fclose(fp);
 }
