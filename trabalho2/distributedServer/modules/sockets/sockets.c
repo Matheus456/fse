@@ -14,8 +14,9 @@ int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, in
 void handleTCPClient(int clientSocket, struct climate *climate);
 double int_to_double(int integer, int decimal);
 
+int centralSocket, clientSocket, serverSocket;
+
 void send_data(int code, int value, int decimal){
-    int centralSocket;
     struct sockaddr_in centralServerAddr;
     int flag = initSocketClient(&centralSocket, &centralServerAddr, CENTRAL_IP, CENTRAL_PORT); 
     if(flag) {
@@ -29,7 +30,7 @@ void send_data(int code, int value, int decimal){
 void *read_data(void *params){
     struct climate *climate = params;
     struct sockaddr_in distributed_serverAddr, clientAddr; 
-    int serverSocket, clientSocket, clienteLength; 
+    int serverSocket, clienteLength; 
     initServerSocket(&serverSocket, &distributed_serverAddr, DISTRIBUTED_IP, DISTRIBUTED_PORT, &clienteLength);
     while(1) {
         clienteLength = sizeof(struct sockaddr_in); 
@@ -115,5 +116,11 @@ int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, in
     else {
         return 1;
     }
+}
 
+void handle_close_sockets()
+{
+    close(centralSocket);
+    close(clientSocket);
+    close(serverSocket);
 }

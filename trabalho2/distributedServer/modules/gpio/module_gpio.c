@@ -77,6 +77,17 @@ void turn_on_component(int index) {
     send_data(index, ON, 0);
 }
 
+void turn_off_temperature_control(struct climate *climate){
+        turn_off_component(AIR_BEDROOM_1);
+        turn_off_component(AIR_BEDROOM_2);
+        send_data(AIR_BEDROOM_1, OFF, 0);
+        usleep(200);
+        send_data(AIR_BEDROOM_2, OFF, 0);
+        usleep(200);
+        send_data(TEMPERATURE_CONTROL, -1, 0);
+        climate->expected_temperature = -2;
+}
+
 void temperature_control_gpio(struct climate *climate) {
     if(climate->temperature <= climate->expected_temperature) {
         turn_off_component(AIR_BEDROOM_1);

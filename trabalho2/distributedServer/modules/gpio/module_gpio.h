@@ -28,6 +28,7 @@
 #define QNT_SENSORS 8
 
 void temperature_control_gpio(struct climate *climate);
+void turn_off_temperature_control(struct climate *climate);
 void turn_on_component(int index);
 void turn_off_component(int index);
 void *polling(void *params);

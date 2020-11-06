@@ -20,17 +20,20 @@ void *climate_control(void *params);
 void handle_alarm();
 
 pthread_mutex_t set_temperature_mutex;
+pthread_t trecive, tsend, ti2c;
+pthread_t t_sensores[QNT_SENSORS];
 
+void handle_interruption(int signal);
 int main(int argc, char* argv[]) 
 { 
     signal(SIGALRM, handle_alarm);
+    signal(SIGINT, handle_interruption);
     pthread_mutex_init(&set_temperature_mutex, NULL);
     alarm(1);
     
     struct climate climate;
-    climate.expected_temperature = -1;
+    climate.expected_temperature = -2;
     // Creating server
-    pthread_t trecive, tsend, ti2c;
     pthread_create(&trecive, NULL, read_data, &climate);
 
     // Setup i2c 
@@ -39,7 +42,6 @@ int main(int argc, char* argv[])
 
     // Creating gpio threads to polling
     initGpio();
-    pthread_t t_sensores[QNT_SENSORS];
     int aux[QNT_SENSORS] = {0,1,2,3,4,5,6,7};
     for(int index=0; index<QNT_SENSORS; index++) {
         pthread_create(&t_sensores[index], NULL, polling, &aux[index]);
@@ -66,5 +68,18 @@ void *climate_control(void *params) {
         if(climate->expected_temperature > 0){
             temperature_control_gpio(climate);
         }
+        else if(climate->expected_temperature == -1){
+            turn_off_temperature_control(climate);
+        }
     }
+}
+
+void handle_interruption(int signal){
+    handle_close_sockets();
+    pthread_cancel(trecive);
+    pthread_cancel(ti2c);
+    for(int i=0; i<QNT_SENSORS; i++) {
+        pthread_cancel(t_sensores[i]);
+    }
+    exit(0);
 }
