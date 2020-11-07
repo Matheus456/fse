@@ -70,7 +70,7 @@ void dataInfo(struct data *data) {
   }
   else
   {
-    mvprintw ((row++)+MARGIN, MARGIN_INFO, "Temperatura esperada: Não definida");
+    mvprintw ((row++)+MARGIN, MARGIN_INFO, "Controle de temperatura desabilitado");
   }
 }
 
@@ -82,7 +82,7 @@ void menuBorders() {
     mvprintw (35+MARGIN, 1+MARGIN, singleBordx);
     for(int row=1; row<35; row++) {
       mvprintw (row+MARGIN, 0+MARGIN, "|");
-      mvprintw (row+MARGIN, 50+MARGIN, "|");
+      mvprintw (row+MARGIN, 55+MARGIN, "|");
       mvprintw (row+MARGIN, 105+MARGIN, "|");
     }
 }

@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "central_server.h"
 #include "sockets.h"
+#include "alarm.h"
 #include "csv.h"
 
 double int_to_double(int integer, int decimal);
@@ -54,7 +55,15 @@ void handleTCPClient(int socketCliente, struct data *data, int **mapping, int cl
 	int read_size;
 
     while ((read_size = recv(clientSocket, &buffer, 3*sizeof(int), 0)) > 0) { 
-        if(buffer[0] <= 13) {
+        if(buffer[0] <= TOTAL_DEVICES-1) {
+            if(buffer[0] >= SP_ROOM) {
+                if(buffer[1] == 0) {
+                    turn_down_alarm(data);
+                }
+                else{
+                    turn_on_alarm(data);
+                }
+            }
             *mapping[buffer[0]] = buffer[1];
         }
         else if(buffer[0] == TEMPERATURE_CONTROL) {

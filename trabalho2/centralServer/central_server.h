@@ -1,6 +1,7 @@
 
 #define QNT_DEVICES 18
 #define QNT_OUTPUTS 6
+#define TOTAL_DEVICES 14
 
 // Lamps
 #define L_KITCHEN 0
@@ -27,7 +28,6 @@
 // Temperature e humidity
 #define TEMPERATURE 14
 #define HUMIDITY 15
-#define TOTAL_DEVICES 14
 #define TEMPERATURE_CONTROL 16
 
 struct devices

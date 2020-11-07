@@ -3,6 +3,7 @@
 #include <bcm2835.h>
 #include <sched.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include "sockets.h"
 #include "distributed_server.h"
@@ -40,6 +41,7 @@ void *polling(void *params) {
         }
         send_data(*index+QNTD_OUTPUTS, ON, 0);
         fflush(stdout);
+        usleep(500);
     }
 
     return (EXIT_SUCCESS);
