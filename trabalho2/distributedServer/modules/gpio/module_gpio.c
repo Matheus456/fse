@@ -32,9 +32,13 @@ void *polling(void *params) {
 
     volatile int i;
     while (1) {
-        while (1 == bcm2835_gpio_lev(sensor));
+        while (1 == bcm2835_gpio_lev(sensor)){
+            usleep(500);
+        };
         send_data(*index+QNTD_OUTPUTS, OFF, 0);
-        while (0 == bcm2835_gpio_lev(sensor));
+        while (0 == bcm2835_gpio_lev(sensor)){
+            usleep(500);
+        };
         for (i = 0; i < 5000; i++) {
             if (0 == bcm2835_gpio_lev(sensor)) 
                 break;
