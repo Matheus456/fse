@@ -72,9 +72,9 @@ int initServerSocket(int *serverSocket, struct sockaddr_in *server, char *ip, in
     // Create socket 
     *serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (*serverSocket == -1) { 
-        printf("Could not create socket"); 
+        printf("Could not create socket\n"); 
     } 
-    puts("Socket Server created"); 
+    puts("Socket Server created\n"); 
   
     // Prepare the sockaddr_in structure 
     server->sin_family = AF_INET; 
@@ -99,10 +99,10 @@ int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, in
     // Create socket 
     *serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (*serverSocket == -1) { 
-        printf("Could not create socket"); 
+        printf("Could not create socket\n"); 
         return 0; 
     } 
-    puts("Socket Client created"); 
+    puts("Socket Client created\n"); 
   
     // Prepare the sockaddr_in structure 
     server->sin_family = AF_INET; 
@@ -110,7 +110,7 @@ int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, in
     server->sin_port = htons(porta); 
   
     if (connect(*serverSocket, (struct sockaddr*)server, sizeof(*server)) < 0) { 
-        puts("DEU RUIM"); 
+        puts("connect error");
         return 0; 
     }  
     else {

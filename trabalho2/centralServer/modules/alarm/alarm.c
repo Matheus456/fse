@@ -1,8 +1,8 @@
 #include <stdlib.h>
+#include "central_server.h"
 #include <alarm.h>
-#include <central_server.h>
 
-void turn_on_alarm(struct data *data){
+void turn_on_alarm(){
     system("omxplayer audio.mp3-");
 }
 

@@ -61,7 +61,7 @@ void handleTCPClient(int socketCliente, struct data *data, int **mapping, int cl
                     turn_down_alarm(data);
                 }
                 else{
-                    turn_on_alarm(data);
+                    turn_on_alarm();
                 }
             }
             *mapping[buffer[0]] = buffer[1];
