@@ -89,18 +89,19 @@ double int_to_double(int integer, int decimal){
 
 int initServerSocket(int *socket_desc, struct sockaddr_in *server, char *ip, int porta, int *clienteLength){
     // Create socket 
-    *socket_desc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    *socket_desc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (*socket_desc == -1) { 
         printf("Could not create socket"); 
     } 
   
     // Prepare the sockaddr_in structure 
+    memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET; 
-    server->sin_addr.s_addr = inet_addr(ip); 
+    server->sin_addr.s_addr = htonl(INADDR_ANY);; 
     server->sin_port = htons(porta); 
   
     // Bind the socket 
-    if (bind(*socket_desc, (struct sockaddr*)server, sizeof(*server)) < 0) { 
+    if (bind(*socket_desc, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
         return 0;
     } 
 
@@ -120,12 +121,12 @@ int initSocketClient(int *clientSocket, struct sockaddr_in *server, char *ip, in
     } 
 
     // Prepare the sockaddr_in structure 
-    memset(server, 0, sizeof(*server));
+    memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET; 
     server->sin_addr.s_addr = inet_addr(ip); 
     server->sin_port = htons(porta); 
   
-    if (connect(*clientSocket, (struct sockaddr*)server, sizeof(*server)) < 0) { 
+    if (connect(*clientSocket, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
         return 0; 
     }  
     else {

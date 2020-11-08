@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     signal(SIGALRM, handle_alarm);
     signal(SIGINT, handle_interruption);
     pthread_mutex_init(&set_temperature_mutex, NULL);
-    alarm(1);
+    ualarm(2e5, 2e5);
     
     struct climate climate;
     climate.expected_temperature = -2;
@@ -57,7 +57,6 @@ int main(int argc, char* argv[])
 
 void handle_alarm(){
     pthread_mutex_unlock(&set_temperature_mutex);
-    alarm(1);
 }
 
 void *climate_control(void *params) {
@@ -80,6 +79,7 @@ void handle_interruption(int signal){
     pthread_cancel(ti2c);
     for(int i=0; i<QNT_SENSORS; i++) {
         pthread_cancel(t_sensores[i]);
+        
     }
     exit(0);
 }
