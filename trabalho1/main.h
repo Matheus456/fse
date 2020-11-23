@@ -5,6 +5,6 @@ struct Temperatures {
    double ti;
    double tr;
    double hysteresis;
-   char *inputType;
+   char inputType[3];
 };  
 #endif
