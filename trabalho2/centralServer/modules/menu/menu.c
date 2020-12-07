@@ -25,7 +25,7 @@ void *menu(void *params)
         menuBorders();
         dataInfo(data);
         menuUser(data);
-        usleep(500000);
+        usleep(2e5);
         refresh ();
         clear();
     }

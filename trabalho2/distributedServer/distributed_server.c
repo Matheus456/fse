@@ -19,15 +19,13 @@ void handleTCPClient(int socketCliente);
 void *climate_control(void *params);
 void handle_alarm();
 
-pthread_mutex_t set_temperature_mutex;
-pthread_t trecive, tsend, ti2c;
-pthread_t t_sensores[QNT_SENSORS];
 
-void handle_interruption(int signal);
+pthread_mutex_t set_temperature_mutex;
 int main(int argc, char* argv[]) 
 { 
+    pthread_t trecive, tsend, ti2c;
+    pthread_t t_sensores[QNT_SENSORS];
     signal(SIGALRM, handle_alarm);
-    signal(SIGINT, handle_interruption);
     pthread_mutex_init(&set_temperature_mutex, NULL);
     ualarm(2e5, 2e5);
     
@@ -67,19 +65,6 @@ void *climate_control(void *params) {
         if(climate->expected_temperature > 0){
             temperature_control_gpio(climate);
         }
-        else if(climate->expected_temperature == -1){
-            turn_off_temperature_control(climate);
-        }
     }
 }
 
-void handle_interruption(int signal){
-    handle_close_sockets();
-    pthread_cancel(trecive);
-    pthread_cancel(ti2c);
-    for(int i=0; i<QNT_SENSORS; i++) {
-        pthread_cancel(t_sensores[i]);
-        
-    }
-    exit(0);
-}

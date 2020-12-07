@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
 } 
   
 void handle_interruption(int signal){
-    handle_close_sockets();
     endwin();
     pthread_cancel(trecive);
     pthread_cancel(tMenu);

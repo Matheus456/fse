@@ -14,9 +14,8 @@ int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, in
 void handleTCPClient(int clientSocket, struct climate *climate);
 double int_to_double(int integer, int decimal);
 
-int centralSocket, serverSocket, clientSocket;
-
 void send_data(int code, int value, int decimal){
+    int centralSocket;
     struct sockaddr_in centralServerAddr;
     int flag = initSocketClient(&centralSocket, &centralServerAddr, CENTRAL_IP, CENTRAL_PORT); 
     if(flag) {
@@ -30,7 +29,7 @@ void send_data(int code, int value, int decimal){
 void *read_data(void *params){
     struct climate *climate = params;
     struct sockaddr_in distributed_serverAddr, clientAddr; 
-    int serverSocket, clienteLength; 
+    int serverSocket, clientSocket, clienteLength; 
     initServerSocket(&serverSocket, &distributed_serverAddr, DISTRIBUTED_IP, DISTRIBUTED_PORT, &clienteLength);
     while(1) {
         clienteLength = sizeof(struct sockaddr_in); 
@@ -70,21 +69,19 @@ double int_to_double(int integer, int decimal){
 
 int initServerSocket(int *serverSocket, struct sockaddr_in *server, char *ip, int porta, int *clienteLength){
     // Create socket 
-    *serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    *serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (*serverSocket == -1) { 
-        printf("Could not create socket\n"); 
+        printf("Could not create socket"); 
     } 
-    puts("Socket Server created\n"); 
+    puts("Socket Server created"); 
   
-
     // Prepare the sockaddr_in structure 
-    memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET; 
-    server->sin_addr.s_addr = htonl(INADDR_ANY);
+    server->sin_addr.s_addr = inet_addr(ip); 
     server->sin_port = htons(porta); 
   
     // Bind the socket 
-    if (bind(*serverSocket, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
+    if (bind(*serverSocket, (struct sockaddr*)server, sizeof(*server)) < 0) { 
         return 0;
     } 
 
@@ -99,30 +96,24 @@ int initServerSocket(int *serverSocket, struct sockaddr_in *server, char *ip, in
 int initSocketClient(int *serverSocket, struct sockaddr_in *server, char *ip, int porta){
 
     // Create socket 
-    *serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
-    if (*serverSocket < 0) { 
-        printf("Could not create socket\n"); 
+    *serverSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    if (*serverSocket == -1) { 
+        printf("Could not create socket"); 
         return 0; 
     } 
+    puts("Socket Client created"); 
   
     // Prepare the sockaddr_in structure 
-    memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET; 
     server->sin_addr.s_addr = inet_addr(ip); 
     server->sin_port = htons(porta); 
   
-    if (connect(*serverSocket, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
+    if (connect(*serverSocket, (struct sockaddr*)server, sizeof(*server)) < 0) { 
         puts("connect error");
         return 0; 
     }  
     else {
         return 1;
     }
-}
 
-void handle_close_sockets()
-{
-    close(centralSocket);
-    close(centralSocket);
-    close(serverSocket);
 }

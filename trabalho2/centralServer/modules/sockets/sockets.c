@@ -6,18 +6,17 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "central_server.h"
-#include "sockets.h"
 #include "alarm.h"
+#include "sockets.h"
 #include "csv.h"
 
 double int_to_double(int integer, int decimal);
 int initServerSocket(int *socket_desc, struct sockaddr_in *server, char *ip, int porta, int *clienteLength);
 int initSocketClient(int *clientSocket, struct sockaddr_in *server, char *ip, int porta);
-void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSocket);
-
-int distributedSocket, clientSocket, serverSocket;
+void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSock);
 
 void send_data(int code, int value, int decimal){
+    int distributedSocket;
     struct sockaddr_in distributedServer;
     int flag = initSocketClient(&distributedSocket, &distributedServer, DISTRIBUTED_IP, DISTRIBUTED_PORT); 
     if(flag) {
@@ -29,7 +28,7 @@ void send_data(int code, int value, int decimal){
 }
 
 void *read_data(void *params){
-    int serverSocket, clienteLength;
+    int serverSocket, clienteLength, clientSock;
     struct sockaddr_in serverAddr, clientAddr;
     struct data *data = params;
     data->sensors->spRoom = 0;
@@ -43,18 +42,18 @@ void *read_data(void *params){
     initServerSocket(&serverSocket, &serverAddr, CENTRAL_IP, CENTRAL_PORT, &clienteLength);
     while(1) {
         clienteLength = sizeof(struct sockaddr_in); 
-        clientSocket = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&clienteLength); 
-        handleTCPClient(clientSocket, data, mapping, clientSocket);
-        close(clientSocket);
+        clientSock = accept(serverSocket, (struct sockaddr*)&clientAddr, (socklen_t*)&clienteLength); 
+        handleTCPClient(clientSock, data, mapping, clientSock);
+        close(clientSock);
     }
     close(serverSocket);
 }
 
-void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSocket) {
+void handleTCPClient(int socketCliente, struct data *data, int **mapping, int clientSock) {
 	int buffer[3];
 	int read_size;
 
-    while ((read_size = recv(clientSocket, &buffer, 3*sizeof(int), 0)) > 0) { 
+    while ((read_size = recv(clientSock, &buffer, 3*sizeof(int), 0)) > 0) { 
         if(buffer[0] <= TOTAL_DEVICES-1) {
             if(buffer[0] >= SP_ROOM) {
                 if(buffer[1] == 0) {
@@ -89,19 +88,18 @@ double int_to_double(int integer, int decimal){
 
 int initServerSocket(int *socket_desc, struct sockaddr_in *server, char *ip, int porta, int *clienteLength){
     // Create socket 
-    *socket_desc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); 
+    *socket_desc = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP); 
     if (*socket_desc == -1) { 
         printf("Could not create socket"); 
     } 
   
     // Prepare the sockaddr_in structure 
-    memset(server, 0, sizeof(struct sockaddr_in));
     server->sin_family = AF_INET; 
-    server->sin_addr.s_addr = htonl(INADDR_ANY);; 
+    server->sin_addr.s_addr = inet_addr(ip); 
     server->sin_port = htons(porta); 
   
     // Bind the socket 
-    if (bind(*socket_desc, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
+    if (bind(*socket_desc, (struct sockaddr*)server, sizeof(*server)) < 0) { 
         return 0;
     } 
 
@@ -121,23 +119,16 @@ int initSocketClient(int *clientSocket, struct sockaddr_in *server, char *ip, in
     } 
 
     // Prepare the sockaddr_in structure 
-    memset(server, 0, sizeof(struct sockaddr_in));
+    memset(server, 0, sizeof(*server));
     server->sin_family = AF_INET; 
     server->sin_addr.s_addr = inet_addr(ip); 
     server->sin_port = htons(porta); 
   
-    if (connect(*clientSocket, (struct sockaddr*)server, sizeof(struct sockaddr_in)) < 0) { 
+    if (connect(*clientSocket, (struct sockaddr*)server, sizeof(*server)) < 0) { 
         return 0; 
     }  
     else {
         return 1;
     }
 
-}
-
-void handle_close_sockets()
-{
-    close(distributedSocket);
-    close(clientSocket);
-    close(serverSocket);
 }

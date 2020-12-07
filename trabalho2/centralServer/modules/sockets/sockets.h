@@ -5,4 +5,3 @@
 
 void send_data(int code, int value, int decimal);
 void *read_data(void *params);
-void handle_close_sockets();
